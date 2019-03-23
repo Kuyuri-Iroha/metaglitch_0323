@@ -1,3 +1,5 @@
+precision mediump float;
+
 //
 // GLSL textureless classic 3D noise "cnoise",
 // with an RSL-style periodic variant "pnoise".
@@ -179,11 +181,6 @@ float pnoise(vec3 P, vec3 rep)
 
 // metaball.frag =================================
 
-uniform sampler2D texture;
-uniform vec2 resolution;
-uniform float time;
-out vec4 outColor;
-
 // 定数
 const float PI = 3.14159265;
 const float ANGLE = 90.0;
@@ -191,8 +188,15 @@ const float FOV = ANGLE * PI/2.0 / 180.0;
 const vec3 LIGHT_DIR = vec3(-0.577, 0.577, 0.577);
 const int SPHERE_NUMBER = 3;
 const int PARTICLE_NUMBER = 10;
-const float SPHERE_SIZES[SPHERE_NUMBER] = {0.5, 0.5, 0.5};
+const float SPHERE_SIZES[SPHERE_NUMBER] = {0.3, 0.3, 0.3};
 const float PARTICLE_SIZES[PARTICLE_NUMBER] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
+
+// uniforms
+uniform sampler2D texture;
+uniform vec2 resolution;
+uniform float time;
+uniform mat3 sphereEuler;
+out vec4 outColor;
 
 // 変数
 vec3 spherePos[SPHERE_NUMBER];
@@ -224,7 +228,8 @@ vec3 rotateFromEuler(vec3 pos, vec3 euler)
 // smoothing min
 float smoothMin(float d1, float d2, float k){
     float h = exp(-k * d1) + exp(-k * d2);
-    return -log(h) / k;
+    float smoothRes = -log(h) / k;
+    return 16383.9999 < smoothRes ? min(d1, d2) : smoothRes;
 }
 
 // 球の距離関数
@@ -251,7 +256,7 @@ float distFunc(vec3 p)
   float dist = distSphere(p, 0);
   for(int i = 1; i < SPHERE_NUMBER; i++)
   {
-    dist = smoothMin(dist, distSphere(p, i), 50.0);
+    dist = smoothMin(dist, distSphere(p, i), 40.0);
   }
   return dist;
 }
@@ -300,19 +305,19 @@ void main()
   vec3 camSide = cross(camDir, camUp);
   float targetDepth = 1.0;
 
-  // スフィアの移動
-  float moveT = time / 1.5;
-  spherePos[0].x = cnoise(vec3(moveT, 0.0, 0.0)) * 1.0;
-  spherePos[0].y = cnoise(vec3(0.0, moveT, 0.0)) * 1.0;
-  spherePos[0].z = cnoise(vec3(0.0, 0.0, moveT)) * 0.5;
-  spherePos[1].x = cnoise(vec3(-moveT + 4.0, 0.0, 0.0)) * 1.0 + 0.7;
-  spherePos[1].y = cnoise(vec3(moveT, -moveT, 0.0)) * 2.0;
-  spherePos[1].z = cnoise(vec3(0.0, 0.0, -moveT + 4.0)) * 0.5;
-  spherePos[2].x = cnoise(vec3(moveT + 20.0, -moveT, 0.0)) * 2.0;
-  spherePos[2].y = cnoise(vec3(0.0, moveT + 20.0, 0.0)) * 1.0 - 0.7;
-  spherePos[2].z = cnoise(vec3(0.0, 0.0, moveT + 20.0)) * 0.5;
+  // スフィアの初期位置
+  const float SPHERES_MARGIN = 1.0 * ((-cos(time) + 1.0) / 2.0);
+  spherePos[0] = vec3(0.0, -SPHERES_MARGIN, 0.0);
+  spherePos[1] = vec3(-SPHERES_MARGIN * cos(PI/6), SPHERES_MARGIN * sin(PI/6), 0.0);
+  spherePos[2] = vec3(SPHERES_MARGIN * cos(PI/6), SPHERES_MARGIN * sin(PI/6), 0.0);
 
-  vec3 ray = normalize(vec3(sin(FOV) * pos.x - 0.2, sin(FOV) * pos.y + 0.2, -cos(FOV)));
+  // スフィアの回転
+  for(int i = 0; i < SPHERE_NUMBER; i++)
+  {
+    spherePos[i] = rotateFromEuler(spherePos[i], sphereEuler[i]);
+  }
+
+  vec3 ray = normalize(vec3(sin(FOV) * pos.x, sin(FOV) * pos.y, -cos(FOV)));
 
   float distance = 0.0;
   float rayLength = 0.0;
@@ -333,7 +338,7 @@ void main()
   // hit check
   if(abs(distance) < EPS)
   {
-    const float NORMAL_DELTA = 0.3;
+    const float NORMAL_DELTA = 0.1;
     vec3 normal[7];
     normal[0] = getNormal(rayPos);
     normal[1] = getNormal(rayPos + vec3(-NORMAL_DELTA, 0.0, 0.0));
@@ -349,7 +354,7 @@ void main()
       ao += genAmbientOcclusion(rayPos, normal[i]) * 0.14285714285;
     }
 
-    vec3 albedo = vec3(1.0);
+    vec3 albedo = normal[0];
 //    float diffuse = clamp(dot(LIGHT_DIR, normal[0]), 0.1, 1.0);
     outColor.rgb = albedo;
     outColor = vec4(outColor.rgb - ao.xyz * ao.w, 1.0);
