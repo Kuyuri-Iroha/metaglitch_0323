@@ -15,12 +15,12 @@ void draw()
 {
   background(0);
   metaball.set("resolution", width, height);
-  metaball.set("time", frameCount);
+  metaball.set("time", float(frameCount) / 50.0);
   filter(metaball);
 
-  saveFrame("capture/####.png");
+//  saveFrame("capture/####.png");
   if(400 < frameCount)
   {
-    exit();
+//    exit();
   }
 }

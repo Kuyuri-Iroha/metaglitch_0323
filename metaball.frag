@@ -181,7 +181,7 @@ float pnoise(vec3 P, vec3 rep)
 
 uniform sampler2D texture;
 uniform vec2 resolution;
-uniform int time;
+uniform float time;
 out vec4 outColor;
 
 // 定数
@@ -197,6 +197,29 @@ const float sphere03Size = 0.5;
 vec3 sphere01Pos = vec3(0.0, 0.0, 0.0);
 vec3 sphere02Pos = vec3(0.0, 0.0, 0.0);
 vec3 sphere03Pos = vec3(0.0, 0.0, 0.0);
+
+// 転置行列
+mat3 transpose(in mat3 origin)
+{
+  return mat3(
+    origin[0][0], origin[1][0], origin[2][0],
+    origin[0][1], origin[1][1], origin[2][1],
+    origin[0][2], origin[1][2], origin[2][2]
+  );
+}
+
+// Euler rotate
+vec3 rotateFromEuler(vec3 pos, vec3 euler)
+{
+  vec3 s = vec3(sin(euler.x), sin(euler.y), sin(euler.z));
+  vec3 c = vec3(cos(euler.x), cos(euler.y), cos(euler.z));
+  mat3 rot = mat3(
+    c.z*c.y, -s.z*c.x+c.z*s.y*s.x,  s.z*s.x+c.z*s.y*c.x,
+    s.z*c.y,  c.z*c.x+s.z*s.y*s.x, c.z*-s.x+s.z*s.y*c.x,
+       -s.y,              c.y*s.x,              c.y*c.x
+  );
+  return rot * pos;
+}
 
 // smoothing min
 float smoothMin(float d1, float d2, float k){
@@ -231,8 +254,9 @@ float distSphere03(vec3 p)
 // 距離関数
 float distFunc(vec3 p)
 {
-  float tmp = smoothMin(distSphere01(p), distSphere02(p), 10.0);
-  return smoothMin(tmp, distSphere03(p), 10.0);
+  vec3 rotP = rotateFromEuler(p, vec3(0.0, radians(time * 40.0), 0.0));
+  float tmp = smoothMin(distSphere01(rotP), distSphere02(rotP), 10.0);
+  return smoothMin(tmp, distSphere03(rotP), 10.0);
 }
 
 // 法線の取得
@@ -257,7 +281,7 @@ void main()
   float targetDepth = 1.0;
 
   // スフィアの移動
-  float moveT = float(time) / 50.0 / 1.5;
+  float moveT = time / 1.5;
   sphere01Pos.x = cnoise(vec3(moveT, 0.0, 0.0)) * 1.0;
   sphere01Pos.y = cnoise(vec3(0.0, moveT, 0.0)) * 1.0;
   sphere01Pos.z = cnoise(vec3(0.0, 0.0, moveT)) * 0.5;
