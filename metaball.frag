@@ -254,9 +254,8 @@ float distSphere03(vec3 p)
 // 距離関数
 float distFunc(vec3 p)
 {
-  vec3 rotP = rotateFromEuler(p, vec3(0.0, radians(time * 40.0), 0.0));
-  float tmp = smoothMin(distSphere01(rotP), distSphere02(rotP), 10.0);
-  return smoothMin(tmp, distSphere03(rotP), 10.0);
+  float tmp = smoothMin(distSphere01(p), distSphere02(p), 50.0);
+  return smoothMin(tmp, distSphere03(p), 50.0);
 }
 
 // 法線の取得
@@ -268,6 +267,29 @@ vec3 getNormal(vec3 p)
     distFunc(p + vec3(0.0, delta, 0.0)) - distFunc(p + vec3(0.0, -delta, 0.0)),
     distFunc(p + vec3(0.0, 0.0, delta)) - distFunc(p + vec3(0.0, 0.0, -delta))
   ));
+}
+
+// 疑似AOの計算
+// https://qiita.com/edo_m18/items/63dbacb57db3b7734483
+vec4 genAmbientOcclusion(vec3 ro, vec3 rd)
+{
+    vec4 totalAO = vec4(0.0);
+    float sca = 1.0;
+
+    for (int aoI = 0; aoI < 5; aoI++)
+    {
+        float ray2nd = 0.01 + 0.02 * float(aoI * aoI);
+        vec3 aoPos = ro + rd * ray2nd;
+        float distRes = distFunc(aoPos);
+        float ao = clamp(-(distRes - ray2nd), 0.0, 1.0);
+        totalAO += ao * sca * vec4(1.0, 1.0, 1.0, 1.0);
+        sca *= 0.75;
+    }
+
+    const float aoCoef = 0.5;
+    totalAO.w = 1.0 - clamp(aoCoef * totalAO.w, 0.0, 1.0);
+
+    return totalAO;
 }
 
 void main()
@@ -297,22 +319,45 @@ void main()
   float distance = 0.0;
   float rayLength = 0.0;
   vec3 rayPos = camPos;
-  for(int i = 0; i < 128; i++)
+  const float eps = 0.001;
+  const int maxSteps = 128;
+  for(int i = 0; i < maxSteps; i++)
   {
-    distance = distFunc(rayPos);
-    rayLength += distance;
     rayPos = camPos + ray * rayLength;
+
+    distance = distFunc(rayPos);
+
+    if(abs(distance) < eps) break;
+
+    rayLength += distance;
   }
 
   // hit check
-  if(abs(distance) < 0.001)
+  if(abs(distance) < eps)
   {
-    vec3 normal = getNormal(rayPos);
-    float diffuse = clamp(dot(lightDir, normal), 0.1, 1.0);
-    outColor = vec4(vec3(normal), 1.0);
+    const float NORMAL_DELTA = 0.3;
+    vec3 normal[7];
+    normal[0] = getNormal(rayPos);
+    normal[1] = getNormal(rayPos + vec3(-NORMAL_DELTA, 0.0, 0.0));
+    normal[2] = getNormal(rayPos + vec3(NORMAL_DELTA, 0.0, 0.0));
+    normal[3] = getNormal(rayPos + vec3(0.0, -NORMAL_DELTA, 0.0));
+    normal[4] = getNormal(rayPos + vec3(0.0, NORMAL_DELTA, 0.0));
+    normal[5] = getNormal(rayPos + vec3(0.0, 0.0, -NORMAL_DELTA));
+    normal[6] = getNormal(rayPos + vec3(0.0, 0.0, NORMAL_DELTA));
+
+    vec4 ao;
+    for(int i = 0; i < 7; i++)
+    {
+      ao += genAmbientOcclusion(rayPos, normal[i]) * 0.14285714285;
+    }
+
+    vec3 albedo = vec3(1.0);
+//    float diffuse = clamp(dot(lightDir, normal[0]), 0.1, 1.0);
+    outColor.rgb = albedo * diffuse;
+    outColor = vec4(outColor.rgb - ao.xyz * ao.w, 1.0);
   }
   else
   {
-    outColor = vec4(vec3(0.0), 1.0);
+    outColor = vec4(vec3(0.94), 1.0);
   }
 }

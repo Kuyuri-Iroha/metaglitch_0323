@@ -17,6 +17,8 @@ void draw()
   metaball.set("resolution", width, height);
   metaball.set("time", float(frameCount) / 50.0);
   filter(metaball);
+  
+//  println("FPS: "+frameRate);
 
 //  saveFrame("capture/####.png");
   if(400 < frameCount)
