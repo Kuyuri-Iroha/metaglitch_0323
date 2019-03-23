@@ -186,17 +186,17 @@ out vec4 outColor;
 
 // 定数
 const float PI = 3.14159265;
-const float angle = 90.0;
-const float fov = angle * PI/2.0 / 180.0;
-const vec3 lightDir = vec3(-0.577, 0.577, 0.577);
-const float sphere01Size = 0.5;
-const float sphere02Size = 0.5;
-const float sphere03Size = 0.5;
+const float ANGLE = 90.0;
+const float FOV = ANGLE * PI/2.0 / 180.0;
+const vec3 LIGHT_DIR = vec3(-0.577, 0.577, 0.577);
+const int SPHERE_NUMBER = 3;
+const int PARTICLE_NUMBER = 10;
+const float SPHERE_SIZES[SPHERE_NUMBER] = {0.5, 0.5, 0.5};
+const float PARTICLE_SIZES[PARTICLE_NUMBER] = {0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1};
 
 // 変数
-vec3 sphere01Pos = vec3(0.0, 0.0, 0.0);
-vec3 sphere02Pos = vec3(0.0, 0.0, 0.0);
-vec3 sphere03Pos = vec3(0.0, 0.0, 0.0);
+vec3 spherePos[SPHERE_NUMBER];
+vec3 particlePos[PARTICLE_NUMBER];
 
 // 転置行列
 mat3 transpose(in mat3 origin)
@@ -233,39 +233,37 @@ float distSphere(vec3 p, float size)
     return length(p) - size;
 }
 
-// 球01
-float distSphere01(vec3 p)
+// 球
+float distSphere(vec3 p, int index)
 {
-  return length(p + sphere01Pos) - sphere01Size;
+  return length(p + spherePos[index]) - SPHERE_SIZES[index];
 }
 
-// 球02
-float distSphere02(vec3 p)
+// パーティクル
+float distParticle(vec3 p, int index)
 {
-  return length(p + sphere02Pos) - sphere02Size;
-}
-
-// 球03
-float distSphere03(vec3 p)
-{
-  return length(p + sphere03Pos) - sphere03Size;
+  return length(p + particlePos[index]) - PARTICLE_SIZES[index];
 }
 
 // 距離関数
 float distFunc(vec3 p)
 {
-  float tmp = smoothMin(distSphere01(p), distSphere02(p), 50.0);
-  return smoothMin(tmp, distSphere03(p), 50.0);
+  float dist = distSphere(p, 0);
+  for(int i = 1; i < SPHERE_NUMBER; i++)
+  {
+    dist = smoothMin(dist, distSphere(p, i), 50.0);
+  }
+  return dist;
 }
 
 // 法線の取得
 vec3 getNormal(vec3 p)
 {
-  const float delta = 0.0001;
+  const float DELTA = 0.0001;
   return normalize(vec3(
-    distFunc(p + vec3(delta, 0.0, 0.0)) - distFunc(p + vec3(-delta, 0.0, 0.0)),
-    distFunc(p + vec3(0.0, delta, 0.0)) - distFunc(p + vec3(0.0, -delta, 0.0)),
-    distFunc(p + vec3(0.0, 0.0, delta)) - distFunc(p + vec3(0.0, 0.0, -delta))
+    distFunc(p + vec3(DELTA, 0.0, 0.0)) - distFunc(p + vec3(-DELTA, 0.0, 0.0)),
+    distFunc(p + vec3(0.0, DELTA, 0.0)) - distFunc(p + vec3(0.0, -DELTA, 0.0)),
+    distFunc(p + vec3(0.0, 0.0, DELTA)) - distFunc(p + vec3(0.0, 0.0, -DELTA))
   ));
 }
 
@@ -286,8 +284,8 @@ vec4 genAmbientOcclusion(vec3 ro, vec3 rd)
         sca *= 0.75;
     }
 
-    const float aoCoef = 0.5;
-    totalAO.w = 1.0 - clamp(aoCoef * totalAO.w, 0.0, 1.0);
+    const float AO_COEF = 0.5;
+    totalAO.w = 1.0 - clamp(AO_COEF * totalAO.w, 0.0, 1.0);
 
     return totalAO;
 }
@@ -304,36 +302,36 @@ void main()
 
   // スフィアの移動
   float moveT = time / 1.5;
-  sphere01Pos.x = cnoise(vec3(moveT, 0.0, 0.0)) * 1.0;
-  sphere01Pos.y = cnoise(vec3(0.0, moveT, 0.0)) * 1.0;
-  sphere01Pos.z = cnoise(vec3(0.0, 0.0, moveT)) * 0.5;
-  sphere02Pos.x = cnoise(vec3(-moveT + 4.0, 0.0, 0.0)) * 1.0 + 0.7;
-  sphere02Pos.y = cnoise(vec3(moveT, -moveT, 0.0)) * 2.0;
-  sphere02Pos.z = cnoise(vec3(0.0, 0.0, -moveT + 4.0)) * 0.5;
-  sphere03Pos.x = cnoise(vec3(moveT + 20.0, -moveT, 0.0)) * 2.0;
-  sphere03Pos.y = cnoise(vec3(0.0, moveT + 20.0, 0.0)) * 1.0 - 0.7;
-  sphere03Pos.z = cnoise(vec3(0.0, 0.0, moveT + 20.0)) * 0.5;
+  spherePos[0].x = cnoise(vec3(moveT, 0.0, 0.0)) * 1.0;
+  spherePos[0].y = cnoise(vec3(0.0, moveT, 0.0)) * 1.0;
+  spherePos[0].z = cnoise(vec3(0.0, 0.0, moveT)) * 0.5;
+  spherePos[1].x = cnoise(vec3(-moveT + 4.0, 0.0, 0.0)) * 1.0 + 0.7;
+  spherePos[1].y = cnoise(vec3(moveT, -moveT, 0.0)) * 2.0;
+  spherePos[1].z = cnoise(vec3(0.0, 0.0, -moveT + 4.0)) * 0.5;
+  spherePos[2].x = cnoise(vec3(moveT + 20.0, -moveT, 0.0)) * 2.0;
+  spherePos[2].y = cnoise(vec3(0.0, moveT + 20.0, 0.0)) * 1.0 - 0.7;
+  spherePos[2].z = cnoise(vec3(0.0, 0.0, moveT + 20.0)) * 0.5;
 
-  vec3 ray = normalize(vec3(sin(fov) * pos.x - 0.2, sin(fov) * pos.y + 0.2, -cos(fov)));
+  vec3 ray = normalize(vec3(sin(FOV) * pos.x - 0.2, sin(FOV) * pos.y + 0.2, -cos(FOV)));
 
   float distance = 0.0;
   float rayLength = 0.0;
   vec3 rayPos = camPos;
-  const float eps = 0.001;
-  const int maxSteps = 128;
-  for(int i = 0; i < maxSteps; i++)
+  const float EPS = 0.001;
+  const int MAX_STEPS = 128;
+  for(int i = 0; i < MAX_STEPS; i++)
   {
     rayPos = camPos + ray * rayLength;
 
     distance = distFunc(rayPos);
 
-    if(abs(distance) < eps) break;
+    if(abs(distance) < EPS) break;
 
     rayLength += distance;
   }
 
   // hit check
-  if(abs(distance) < eps)
+  if(abs(distance) < EPS)
   {
     const float NORMAL_DELTA = 0.3;
     vec3 normal[7];
@@ -352,8 +350,8 @@ void main()
     }
 
     vec3 albedo = vec3(1.0);
-//    float diffuse = clamp(dot(lightDir, normal[0]), 0.1, 1.0);
-    outColor.rgb = albedo * diffuse;
+//    float diffuse = clamp(dot(LIGHT_DIR, normal[0]), 0.1, 1.0);
+    outColor.rgb = albedo;
     outColor = vec4(outColor.rgb - ao.xyz * ao.w, 1.0);
   }
   else
