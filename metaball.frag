@@ -306,7 +306,7 @@ void main()
   float targetDepth = 1.0;
 
   // スフィアの初期位置
-  const float SPHERES_MARGIN = 1.0 * ((-cos(time) + 1.0) / 2.0);
+  const float SPHERES_MARGIN = 1.0 * ((-cos(time / 5.0 * (PI * 2)) + 1.0) / 2.0);
   spherePos[0] = vec3(0.0, -SPHERES_MARGIN, 0.0);
   spherePos[1] = vec3(-SPHERES_MARGIN * cos(PI/6), SPHERES_MARGIN * sin(PI/6), 0.0);
   spherePos[2] = vec3(SPHERES_MARGIN * cos(PI/6), SPHERES_MARGIN * sin(PI/6), 0.0);
@@ -354,7 +354,7 @@ void main()
       ao += genAmbientOcclusion(rayPos, normal[i]) * 0.14285714285;
     }
 
-    vec3 albedo = normal[0];
+    vec3 albedo = vec3(1.0);
 //    float diffuse = clamp(dot(LIGHT_DIR, normal[0]), 0.1, 1.0);
     outColor.rgb = albedo;
     outColor = vec4(outColor.rgb - ao.xyz * ao.w, 1.0);

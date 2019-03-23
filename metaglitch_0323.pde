@@ -30,15 +30,16 @@ void update()
   
   // sphere
   final float RANDOM_SCALE = 100;
-  sphereEuler.m00 += (noise(time + fractSin(0, 1, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m01 += (noise(time + fractSin(0, 2, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m02 += (noise(time + fractSin(0, 3, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m10 += (noise(time + fractSin(1, 1, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m11 += (noise(time + fractSin(1, 2, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m12 += (noise(time + fractSin(1, 3, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m20 += (noise(time + fractSin(2, 1, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m21 += (noise(time + fractSin(2, 2, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
-  sphereEuler.m22 += (noise(time + fractSin(2, 3, RANDOM_SCALE)) * 2.0 - 1.0) * 0.1;
+  final float SPEED = 0.15;
+  sphereEuler.m00 += (noise(time + fractSin(0, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m01 += (noise(time + fractSin(0, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m02 += (noise(time + fractSin(0, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m10 += (noise(time + fractSin(1, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m11 += (noise(time + fractSin(1, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m12 += (noise(time + fractSin(1, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m20 += (noise(time + fractSin(2, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m21 += (noise(time + fractSin(2, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  sphereEuler.m22 += (noise(time + fractSin(2, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
 }
 
 void draw()
@@ -53,9 +54,9 @@ void draw()
   
 //  println("FPS: "+frameRate);
 
-//  saveFrame("capture/####.png");
-  if(400 < frameCount)
+  saveFrame("capture/####.png");
+  if(250 < frameCount)
   {
-//    exit();
+    exit();
   }
 }
