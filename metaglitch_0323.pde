@@ -1,6 +1,10 @@
 
 PShader metaball;
 PMatrix3D sphereEuler = new PMatrix3D();
+float[] sphereEulerVal = new float[9];
+PMatrix3D particleEuler0 = new PMatrix3D();
+PMatrix3D particleEuler1 = new PMatrix3D();
+float[] particleEulerVal = new float[30];
 float time = 0;
 
 float fract(float a)
@@ -26,20 +30,35 @@ void setup()
 void update()
 {
   // time
-  time = float(frameCount) / 50.0;
+  time = float(frameCount % 251) / 50.0;
   
   // sphere
   final float RANDOM_SCALE = 100;
-  final float SPEED = 0.15;
-  sphereEuler.m00 += (noise(time + fractSin(0, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m01 += (noise(time + fractSin(0, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m02 += (noise(time + fractSin(0, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m10 += (noise(time + fractSin(1, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m11 += (noise(time + fractSin(1, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m12 += (noise(time + fractSin(1, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m20 += (noise(time + fractSin(2, 1, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m21 += (noise(time + fractSin(2, 2, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
-  sphereEuler.m22 += (noise(time + fractSin(2, 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  final float SPEED = 0.1;
+  for(int i = 0; i < sphereEulerVal.length; i++)
+  {
+    sphereEulerVal[i] += (noise(time + fractSin(i / 3, i % 3, RANDOM_SCALE)) * 2.0 - 1.0) * SPEED;
+  }
+  sphereEuler.set(sphereEulerVal);
+
+  // particle
+  final float PARTICLE_SPEED = 0.05;
+  for(int i = 0; i < particleEulerVal.length; i++)
+  {
+    particleEulerVal[i] += (noise(time + fractSin(i / 3 + 50, i % 3 + 50, RANDOM_SCALE)) * 2.0 - 1.0) * PARTICLE_SPEED;
+  }
+  particleEuler0.set(
+    particleEulerVal[0], particleEulerVal[1], particleEulerVal[2], particleEulerVal[3],
+    particleEulerVal[4], particleEulerVal[5], particleEulerVal[6], particleEulerVal[7],
+    particleEulerVal[8], particleEulerVal[9], particleEulerVal[10], particleEulerVal[11],
+    particleEulerVal[12], particleEulerVal[13], particleEulerVal[14], 0.0
+  );
+  particleEuler1.set(
+    particleEulerVal[15], particleEulerVal[16], particleEulerVal[17], particleEulerVal[18],
+    particleEulerVal[19], particleEulerVal[20], particleEulerVal[21], particleEulerVal[22],
+    particleEulerVal[23], particleEulerVal[24], particleEulerVal[25], particleEulerVal[26],
+    particleEulerVal[27], particleEulerVal[28], particleEulerVal[29], 0.0
+  );
 }
 
 void draw()
@@ -50,6 +69,8 @@ void draw()
   metaball.set("resolution", width, height);
   metaball.set("time", time);
   metaball.set("sphereEuler", sphereEuler, true);
+  metaball.set("particleEuler0", particleEuler0, false);
+  metaball.set("particleEuler1", particleEuler1, false);
   filter(metaball);
   
 //  println("FPS: "+frameRate);
