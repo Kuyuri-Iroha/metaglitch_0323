@@ -1,4 +1,5 @@
 PShader metaball;
+PShader glitch;
 PMatrix3D sphereEuler = new PMatrix3D();
 float[] sphereEulerVal = new float[9];
 PMatrix3D particleEuler0 = new PMatrix3D();
@@ -18,12 +19,13 @@ float fractSin (float x, float y, float scale)
 
 void setup()
 {
-  size(500, 500, P3D);
+  size(250, 250, P3D);
   frameRate(50);
   textureMode(REPEAT);
-  smooth(16);
+//  smooth(16);
 
   metaball = loadShader("metaball.frag");
+  glitch = loadShader("glitch.frag");
 }
 
 void update()
@@ -64,7 +66,7 @@ void draw()
 {
   update();
   
-  background(0);
+  background(214.2);
 
   metaball.set("resolution", width, height);
   metaball.set("time", time);
@@ -72,12 +74,16 @@ void draw()
   metaball.set("particleEuler0", particleEuler0, false);
   metaball.set("particleEuler1", particleEuler1, false);
   filter(metaball);
+
+  glitch.set("resolution", width, height);
+  glitch.set("time", time);
+  filter(glitch);
   
 //  println("FPS: "+frameRate);
 
-  saveFrame("capture/####.png");
+//  saveFrame("capture/####.png");
   if(250 < frameCount)
   {
-    exit();
+//    exit();
   }
 }

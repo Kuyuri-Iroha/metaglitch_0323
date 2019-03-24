@@ -209,6 +209,6 @@ void main()
   }
   else
   {
-    outColor = vec4(vec3(0.94), 1.0);
+    outColor = vec4(vec3(0.84), 1.0);
   }
 }
