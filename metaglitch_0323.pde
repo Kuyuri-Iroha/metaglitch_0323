@@ -1,3 +1,6 @@
+// meta-glitch
+// Author: Kuyuri Iroha
+
 PShader metaball;
 PShader glitch;
 PMatrix3D sphereEuler = new PMatrix3D();
