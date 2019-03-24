@@ -66,6 +66,7 @@ void draw()
   update();
   
   background(0);
+  
   metaball.set("resolution", width, height);
   metaball.set("time", time);
   metaball.set("sphereEuler", sphereEuler, true);
