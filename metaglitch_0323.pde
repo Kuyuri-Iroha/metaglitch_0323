@@ -1,4 +1,3 @@
-
 PShader metaball;
 PMatrix3D sphereEuler = new PMatrix3D();
 float[] sphereEulerVal = new float[9];
@@ -66,7 +65,7 @@ void draw()
   update();
   
   background(0);
-  
+
   metaball.set("resolution", width, height);
   metaball.set("time", time);
   metaball.set("sphereEuler", sphereEuler, true);
