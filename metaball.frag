@@ -4,6 +4,7 @@ precision mediump float;
 
 // 定数
 const float PI = 3.14159265;
+const float INF = 1.0 / 0.0;
 const float ANGLE = 90.0;
 const float FOV = ANGLE * PI/2.0 / 180.0;
 const vec3 LIGHT_DIR = vec3(-0.577, 0.577, 0.577);
@@ -205,10 +206,10 @@ void main()
 
     vec3 albedo = vec3(1.0);
     outColor.rgb = albedo;
-    outColor = vec4(outColor.rgb - ao.xyz * ao.w, 1.0);
+    outColor = vec4(outColor.rgb - ao.xyz * ao.w, rayPos.z);
   }
   else
   {
-    outColor = vec4(vec3(0.94), 1.0);
+    outColor = vec4(vec3(0.94), INF);
   }
 }

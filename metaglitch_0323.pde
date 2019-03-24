@@ -1,5 +1,6 @@
 
 PShader metaball;
+PShader focal;
 PMatrix3D sphereEuler = new PMatrix3D();
 float[] sphereEulerVal = new float[9];
 PMatrix3D particleEuler0 = new PMatrix3D();
@@ -25,6 +26,7 @@ void setup()
   smooth(16);
 
   metaball = loadShader("metaball.frag");
+  focal = loadShader("focal.frag");
 }
 
 void update()
@@ -66,12 +68,16 @@ void draw()
   update();
   
   background(0);
+
   metaball.set("resolution", width, height);
   metaball.set("time", time);
   metaball.set("sphereEuler", sphereEuler, true);
   metaball.set("particleEuler0", particleEuler0, false);
   metaball.set("particleEuler1", particleEuler1, false);
   filter(metaball);
+
+  focal.set("resolution", width, height);
+  filter(focal);
   
 //  println("FPS: "+frameRate);
 
